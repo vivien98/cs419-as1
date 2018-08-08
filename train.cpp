@@ -389,6 +389,7 @@ cout<<"Testing after pruning......"<<endl;
 	}
 	accuracy = (1-sqrt(totError))*100;
 	cout<<accuracy<<endl;
+	cout<<"Over"<<endl;
 	return 0;
 }
 
