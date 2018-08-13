@@ -304,7 +304,7 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 int main()
 {
 	
-	int numInstances = 2613;
+	int numInstances = 3919;
 	int numAttr = 12;
 	int numTestCases = 1306;
 	vector<vector<vector<float> > > dataout;
