@@ -12,20 +12,20 @@ int numNodes = 0;
 int numLeaves = 0;
 
 ///
-float avg(vector<float> a, int start,int end){
-	float sum = 0;
+double avg(vector<double> a, int start,int end){
+	double sum = 0;
 	for (int i = start; i < end; i++)
 	{
 		sum += a[i];	
 	}
-	sum /= (end - start);
+	sum = sum/(end - start);
 	return sum;
 }
 
-float errorDueToSplit(int n, int i, vector<float> lab, float &lhs,float &rhs){
+double errorDueToSplit(int n, int i, vector<double> lab, double &lhs,double &rhs){
 	 lhs = avg(lab,0,i);
 	 rhs = avg(lab,i,n);
-	 float sum = 0;
+	 double sum = 0;
 	 for (int j = 0; j < i; j++)
 	 {
 	 	sum += (lab[j] - lhs)*(lab[j] - lhs);
@@ -34,21 +34,21 @@ float errorDueToSplit(int n, int i, vector<float> lab, float &lhs,float &rhs){
 	 {
 	 	sum += (lab[j] - rhs)*(lab[j] - rhs);
 	 }
-
+	 //sum /= n;
 	 return sum;
 
 }
-float bestSplitOnAtt(int n, vector<vector<float> > lab,int &split,float &lhs, float &rhs){
-	float minErr = HUGE_VAL;
-	vector<float> label;
+double bestSplitOnAtt(int n, vector<vector<double> > lab,int &split,double &lhs, double &rhs){
+	double minErr = HUGE_VAL;
+	vector<double> label;
 	for (int i = 0; i < n; i++)
 	{
 		label.push_back(lab[i][2]);
 	}
 	for (int i = 0; i < n; i++)
-	{	float tlhs,trhs;
-		float err = errorDueToSplit(n,i,label,tlhs,trhs);
-		if(err < minErr){
+	{	double tlhs,trhs;
+		double err = errorDueToSplit(n,i,label,tlhs,trhs);
+		if(err <= minErr){
 			minErr = err;
 			split = i;
 			lhs = tlhs;
@@ -58,17 +58,17 @@ float bestSplitOnAtt(int n, vector<vector<float> > lab,int &split,float &lhs, fl
  	return minErr;
 }
 
-void bestAtt(int numAttr,int numInstances, float &split,int &attrInd,float &merr, vector<vector<vector<float> > > data,vector<vector<vector<float> > > &rc,vector<vector<vector<float> > > &lc,float &rhs,float &lhs){
+void bestAtt(int numAttr,int numInstances, double &split,int &attrInd,double &merr, vector<vector<vector<double> > > data,vector<vector<vector<double> > > &rc,vector<vector<vector<double> > > &lc,double &rhs,double &lhs){
 	
 	int tsplit = 0;
-	float tlhs,trhs;
+	double tlhs,trhs;
 	merr = HUGE_VAL;
 	
 	for (int i = 0; i < numAttr; i++)
 	{
-		float err;
+		double err;
 		err = bestSplitOnAtt(numInstances,data[i],tsplit,tlhs,trhs);
-		if(err < merr){
+		if(err <= merr){
 			merr = err;
 			attrInd = i;
 			split = data[i][tsplit][1];
@@ -76,7 +76,7 @@ void bestAtt(int numAttr,int numInstances, float &split,int &attrInd,float &merr
 			rhs = trhs;
 		}
 	}
-	map<float, bool> where;
+	map<double, bool> where;
 	for (int i = 0; i < numInstances; i++)
 	{
 		if (data[attrInd][i][1] < split)
@@ -88,7 +88,7 @@ void bestAtt(int numAttr,int numInstances, float &split,int &attrInd,float &merr
 	}
 	for (int i = 0; i < numAttr; i++)
 	{
-		vector<vector<float> > ltemp,rtemp;
+		vector<vector<double> > ltemp,rtemp;
 		for (int j = 0; j < numInstances; j++)
 			{
 				if(where[data[i][j][0]]){
@@ -105,10 +105,10 @@ void bestAtt(int numAttr,int numInstances, float &split,int &attrInd,float &merr
 	return;
 }
 ///
-bool compare(vector<float> v1,vector<float> v2){
+bool compare(vector<double> v1,vector<double> v2){
 	return (v1[0] < v2[0]);
 }
-void sortAccToAttr(int ind, int numInstances, vector<vector<float> > &data){
+void sortAccToAttr(int ind, int numInstances, vector<vector<double> > &data){
 	
 	for (int i = 0; i < numInstances; i++)
 	{
@@ -126,16 +126,16 @@ void sortAccToAttr(int ind, int numInstances, vector<vector<float> > &data){
 	}
 	return;
 }
-void sortData(int numInstances, int numAttr, vector<vector<float> > data, vector<vector<vector<float> > > &sorted){
+void sortData(int numInstances, int numAttr, vector<vector<double> > data, vector<vector<vector<double> > > &sorted){
 	
 	for (int i = 1; i < numAttr; i++)
 	{	
 		
 		sortAccToAttr(i,numInstances, data);
-		vector<vector<float> > ttemp;
+		vector<vector<double> > ttemp;
 		for (int j = 0; j < numInstances; j++)
 		{
-			vector<float> temp ;
+			vector<double> temp ;
 			temp.push_back(data[j][0]);
 			temp.push_back(data[j][i]);
 			temp.push_back(data[j][numAttr]);
@@ -147,7 +147,7 @@ void sortData(int numInstances, int numAttr, vector<vector<float> > data, vector
 	return;
 }
 ///
-void printTable(int numAttr,vector<vector<vector<float> > > lchild){
+void printTable(int numAttr,vector<vector<vector<double> > > lchild){
 	for (int i = 0; i < numAttr; i++)
 	{
 		for (int j = 0; j < lchild[0].size(); j++)
@@ -165,31 +165,37 @@ void printTable(int numAttr,vector<vector<vector<float> > > lchild){
 
 class Node{
 public:
-	float split = 0;
+	double split = 0;
 	int attInd = 0;
-	float err;
-	float ERR = -1;
+	double err;
+	double ERR = 0;
 	int numTestsPassed = 0;
 	int numLeft = 0;
 	int numRight=0;
 	Node* lchild;
 	Node* rchild;
 	bool isLeaf = false;
-	float av;
-	void create(int numAttr,int numInstances, vector<vector<vector<float> > > data,int prevNum,float &avg,int maxLeafNum);
-	float decide(vector<float> instance);
-	float decide(vector<float> instance, float expected, float &error);
-	void assignErr(vector<vector<float> > valiData,vector<float> expected);
+	bool passed = false;
+	double av;
+	void create(int numAttr,int numInstances, vector<vector<vector<double> > > data,int prevNum,int maxLeafNum);
+	double decide(vector<double> instance);
+	double decide(vector<double> instance, double expected, double &error);
+	void assignErr(vector<vector<double> > valiData,vector<double> expected);
 	void exploreAndCut();
-	void prune(vector<vector<float> > valiData,vector<float> expected);
+	void prune(vector<vector<double> > valiData,vector<double> expected);
 
 };
-void Node::create(int numAttr,int numInstances, vector<vector<vector<float> > > data,int prevNum,float &avg,int maxLeafNum){
-	float lhs,rhs;
+void Node::create(int numAttr,int numInstances, vector<vector<vector<double> > > data,int prevNum,int maxLeafNum){
+	double lhs,rhs;
 	numNodes++;
+	for (int i = 0; i < numInstances; i++)
+	{
+		av += data[0][i][2];
+	}
+	av = av/numInstances;
 		if (numInstances <= maxLeafNum)
 		{
-			av = avg;
+			//av = avg;
 			err = 0;
 			lchild = NULL;
 			rchild = NULL;
@@ -199,7 +205,7 @@ void Node::create(int numAttr,int numInstances, vector<vector<vector<float> > > 
 		}
 		if (numInstances==1)
 		{
-			av = data[0][0][numAttr];
+			//av = data[0][0][numAttr];
 			err = 0;
 			lchild = NULL;
 			rchild = NULL;
@@ -210,7 +216,7 @@ void Node::create(int numAttr,int numInstances, vector<vector<vector<float> > > 
 		}
 		if (prevNum == numInstances)
 		{
-			av = avg;
+			//av = avg;
 			err = 0;
 			lchild = NULL;
 			rchild = NULL;
@@ -219,8 +225,8 @@ void Node::create(int numAttr,int numInstances, vector<vector<vector<float> > > 
 			//cout<<"leaf"<<endl;
 			return;
 		}
-		av = avg;
-		vector<vector<vector<float> > > lc,rc;
+		//av = avg;
+		vector<vector<vector<double> > > lc,rc;
 
 		bestAtt(numAttr, numInstances, split, attInd, err, data, rc, lc, rhs,lhs);
 		
@@ -228,13 +234,13 @@ void Node::create(int numAttr,int numInstances, vector<vector<vector<float> > > 
 		ct++;
 		lchild = new Node;
 		rchild = new Node;
-		lchild->create(numAttr,lc[0].size(),lc,numInstances,lhs,maxLeafNum);
+		lchild->create(numAttr,lc[0].size(),lc,numInstances,maxLeafNum);
 		//cout<<"br"<<endl;
-		rchild->create(numAttr,rc[0].size(),rc,numInstances,rhs,maxLeafNum);
+		rchild->create(numAttr,rc[0].size(),rc,numInstances,maxLeafNum);
 		return;
 
 	}
-float Node::decide(vector<float> instance){
+double Node::decide(vector<double> instance){
 		if(isLeaf){
 			return av;
 		}
@@ -243,8 +249,9 @@ float Node::decide(vector<float> instance){
 		}
 			return rchild->decide(instance);
 	}
-float Node::decide(vector<float> instance, float expected, float &error){
-	ERR = (((expected - av)*(expected - av)/(expected*expected)) + numTestsPassed*ERR)/(numTestsPassed + 1);
+double Node::decide(vector<double> instance, double expected, double &error){
+	ERR = (((expected - av)*(expected - av)) + numTestsPassed*ERR)/(numTestsPassed + 1);
+	passed = true;
 	numTestsPassed++;
 		if(isLeaf){
 			//cout<<av<<" "<<err<<endl;
@@ -260,8 +267,8 @@ float Node::decide(vector<float> instance, float expected, float &error){
 		numRight++;
 		return rchild->decide(instance,expected,error);
 	}
-void Node::assignErr(vector<vector<float> > valiData,vector<float> expected){
-	float e;
+void Node::assignErr(vector<vector<double> > valiData,vector<double> expected){
+	double e;
 	for (int i = 0; i < valiData.size(); i++)
 	{
 		decide(valiData[i],expected[i],e);
@@ -277,7 +284,7 @@ void Node::exploreAndCut(){
 	lchild->exploreAndCut();
 	rchild->exploreAndCut();
 
-	if (ERR <= (numLeft/(numRight + numLeft))*(lchild->ERR) + (numRight/(numRight + numLeft))*(rchild->ERR) && ERR != -1)
+	if (ERR*(numTestsPassed) <= numLeft*(lchild->ERR) + numRight*(rchild->ERR) && passed && ((lchild->isLeaf)&&(rchild->isLeaf)))
 	{
 		lchild->~Node();
 		rchild->~Node()	;
@@ -291,7 +298,7 @@ void Node::exploreAndCut(){
 	}
 	return;
 }
-void Node::prune(vector<vector<float> > valiData,vector<float> expected){
+void Node::prune(vector<vector<double> > valiData,vector<double> expected){
 	assignErr(valiData,expected);
 	exploreAndCut();
 	return;
@@ -301,7 +308,7 @@ void Node::prune(vector<vector<float> > valiData,vector<float> expected){
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool train=true){
+void readintovec(string line, vector<double> &data,int lineNum,int numAttr,bool train=true){
 	
 	if(train){
 		data.push_back(lineNum);
@@ -310,8 +317,9 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 	for (int i = 0; i < numAttr; i++)
 	{
 		size_t pos = line.find(",");
-		float val;
-		val = stof(line.substr(0,pos));
+		double val;
+		val = stod(line.substr(0,pos));
+
 		//if(!train)cout<<val<<endl;
 		line = line.substr(pos + 1);
 		data.push_back(val);
@@ -328,25 +336,48 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 int main()
 {
 	
-	int numInstances = 576;
+	const int numInstances = 576;
+	const int numPrune = 192;//192 
+	int prunestart = 0;//0
 	int numAttr = 9;
-	int numTestCases = 576;
-	int maxLeafNum = 500;
-	vector<vector<vector<float> > > dataout;
-	vector<vector<float> > datain;
-	vector<vector<float> > datatest;
-	vector<float> expected;
+	const int numTestCases = 192;
+	const int maxLeafNum = 30;//30
+	int numTrees = 0;
+	// vector<vector<vector<double> > > dataout;
+	// vector<vector<double> > datain;
+	// vector<vector<double> > dataprune;
+	// vector<vector<double> > datatest;
+	// vector<double> expected,expectedP;
+	// vector<double> dataresult(numTestCases,0.0);
+	vector<double> dataresult(numTestCases,0.0);
 	
+while(prunestart < 40){//40
+	vector<vector<vector<double> > > dataout;
+	vector<vector<double> > datain;
+	vector<vector<double> > dataprune;
+	vector<vector<double> > datatest;
+	vector<double> expected,expectedP;
+	
+	numAttr = 9;
+	numNodes = numLeaves = 0;
 	string line;
 	ifstream myfile ("train.csv");
 	if (myfile.is_open())
 	{
 	int k = 1;
+	string dump;
+	getline(myfile,dump);
 	while ( getline (myfile,line) && k<=numInstances)
 	{
-	vector<float> l;
+	vector<double> l;
 	readintovec(line, l, k,numAttr);
-	datain.push_back(l);
+	if (k <= (prunestart + numPrune) && k > prunestart)
+	{
+		dataprune.push_back(l);
+	}
+	else{
+		datain.push_back(l);
+	}
 	k++;
 	}
 	myfile.close();
@@ -354,13 +385,15 @@ int main()
   	else cout << "Unable to open training file"; 
 
   	string line1;
-	ifstream myfile1 ("train.csv");
+	ifstream myfile1 ("test.csv");
 	if (myfile1.is_open())
 	{
 	int k1 = 1;
+	string dump;
+	getline(myfile1,dump);
 	while ( getline (myfile1,line1) && k1<=numTestCases)
 	{
-	vector<float> l1;
+	vector<double> l1;
 	readintovec(line1, l1, k1,numAttr,false);
 	datatest.push_back(l1);
 	k1++;
@@ -377,54 +410,80 @@ int main()
   	 	datatest[i].pop_back();
   	 	
   	 }
+  	 for (int i = 0; i < dataprune.size(); i++)
+  	 {
+  		//cout<<i<<endl;
+  	 	expectedP.push_back(dataprune[i][numAttr-1]);
+  	 	dataprune[i].pop_back();
+  	 	
+  	 }
 cout<<"Sorting......"<<endl;
-	sortData(numInstances,numAttr,datain,dataout);
+	sortData(numInstances-numPrune,numAttr,datain,dataout);
 	numAttr--;
 	int attrInd;
-	float merr,split;
+	double merr,split;
 	int prevNum = 0;
-	float av = 0;
+	double av = 0;
 	Node* root = new Node;
 cout<<"Training......"<<endl;
-	root->create(numAttr,numInstances,dataout,prevNum,av,maxLeafNum);
-	float totError = 0;
-	cout<<numNodes<<endl;
-cout<<"Testing before pruning......"<<endl;
-	for (int i = 0; i < numTestCases; ++i)
-	{
-		float error;
-		root->decide(datatest[i],expected[i],error);
-		totError = (totError*(i)+error)/(i+1);
+	root->create(numAttr,numInstances-numPrune,dataout,prevNum,maxLeafNum);
+	double totError = 0;
+	cout<<numNodes<<" "<<root->isLeaf<<endl;
+// cout<<"Testing before pruning......"<<endl;
+// 	for (int i = 0; i < numTestCases; ++i)
+// 	{
+// 		double error;
+// 		root->decide(datatest[i],expected[i],error);
+// 		totError = (totError*(i)+error)/(i+1);
 
-	}
-	float accuracy = (1-sqrt(totError))*100;
-	cout<<accuracy<<endl;
+// 	}
+// 	double accuracy = (1-sqrt(totError))*100;
+// 	cout<<accuracy<<endl;
 	//root->decide(in);
 cout<<"Pruning......"<<endl;
-	root->prune(datatest,expected);
+	root->prune(dataprune,expectedP);
 	cout<<numNodes<<endl;
 	totError = 0;
-cout<<"Testing after pruning......"<<endl;
-	for (int i = 0; i < numTestCases; ++i)
+// cout<<"Testing after pruning......"<<endl;
+// 	for (int i = 0; i < numTestCases; ++i)
+// 	{
+// 		double error;
+// 		root->decide(datatest[i],expected[i],error);
+// 		totError = (totError*(i)+error)/(i+1);
+
+// 	}
+// 	accuracy = (1-sqrt(totError))*100;
+// 	cout<<accuracy<<","<<maxLeafNum<<endl;
+	cout<<"Testing on unseen file....."<<endl;
+	for (int i = 0; i < numTestCases; i++)
 	{
-		float error;
-		root->decide(datatest[i],expected[i],error);
-		totError = (totError*(i)+error)/(i+1);
+		//double result;
+		if(numNodes>22)
+		dataresult[i] += root->decide(datatest[i]);
+	
+		    //mfile << i+1<<","<<result <<endl;
+		    
+		
 
 	}
-	accuracy = (1-sqrt(totError))*100;
-	cout<<accuracy<<","<<maxLeafNum<<endl;
-	cout<<"Testing on unseen file"<<endl;
+	root->~Node();
+prunestart += 5 ;
+if(numNodes>22)numTrees++;
+cout<<numTrees<<endl;
+}
+
+
 	ofstream mfile ("output.csv");
-  
+  	mfile<<"Id,output"<<endl;
 	for (int i = 0; i < numTestCases; ++i)
 	{
-		float result;
-		result = root->decide(datatest[i]);
+		//double result;
+		//result = root->decide(datatest[i]);
 		if (mfile.is_open())
 		  {
 		  	//string s = result.str();
-		    mfile << result <<endl;
+		  	dataresult[i] = dataresult[i]/numTrees;
+		    mfile << i+1<<","<<dataresult[i] <<endl;
 		    
 		    
 		  }
@@ -433,7 +492,7 @@ cout<<"Testing after pruning......"<<endl;
 
 	}
 	mfile.close();
-
+	cout<<"Over";//root->isLeaf<<endl;
 
 	return 0;
 }

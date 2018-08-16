@@ -328,25 +328,35 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 int main()
 {
 	
-	int numInstances = 576;
-	int numAttr = 9;
-	int numTestCases = 576;
-	int maxLeafNum = 500;
+	int numInstances = 3919;
+	int numPrune = 1306; 
+	int numAttr = 12;
+	int numTestCases = 979;
+	int maxLeafNum = 0;
 	vector<vector<vector<float> > > dataout;
 	vector<vector<float> > datain;
+	vector<vector<float> > dataprune;
 	vector<vector<float> > datatest;
-	vector<float> expected;
+	vector<float> expected,expectedP;
 	
 	string line;
 	ifstream myfile ("train.csv");
 	if (myfile.is_open())
 	{
 	int k = 1;
+	string dump;
+	getline(myfile,dump);
 	while ( getline (myfile,line) && k<=numInstances)
 	{
 	vector<float> l;
 	readintovec(line, l, k,numAttr);
-	datain.push_back(l);
+	if (k <= numInstances - numPrune)
+	{
+		datain.push_back(l);
+	}
+	else{
+		dataprune.push_back(l);
+	}
 	k++;
 	}
 	myfile.close();
@@ -354,10 +364,12 @@ int main()
   	else cout << "Unable to open training file"; 
 
   	string line1;
-	ifstream myfile1 ("train.csv");
+	ifstream myfile1 ("test.csv");
 	if (myfile1.is_open())
 	{
 	int k1 = 1;
+	string dump;
+	getline(myfile1,dump);
 	while ( getline (myfile1,line1) && k1<=numTestCases)
 	{
 	vector<float> l1;
@@ -377,8 +389,15 @@ int main()
   	 	datatest[i].pop_back();
   	 	
   	 }
+  	 for (int i = 0; i < dataprune.size(); i++)
+  	 {
+  		//cout<<i<<endl;
+  	 	expectedP.push_back(dataprune[i][numAttr-1]);
+  	 	dataprune[i].pop_back();
+  	 	
+  	 }
 cout<<"Sorting......"<<endl;
-	sortData(numInstances,numAttr,datain,dataout);
+	sortData(numInstances-numPrune,numAttr,datain,dataout);
 	numAttr--;
 	int attrInd;
 	float merr,split;
@@ -386,37 +405,37 @@ cout<<"Sorting......"<<endl;
 	float av = 0;
 	Node* root = new Node;
 cout<<"Training......"<<endl;
-	root->create(numAttr,numInstances,dataout,prevNum,av,maxLeafNum);
+	root->create(numAttr,numInstances-numPrune,dataout,prevNum,av,maxLeafNum);
 	float totError = 0;
 	cout<<numNodes<<endl;
-cout<<"Testing before pruning......"<<endl;
-	for (int i = 0; i < numTestCases; ++i)
-	{
-		float error;
-		root->decide(datatest[i],expected[i],error);
-		totError = (totError*(i)+error)/(i+1);
+// cout<<"Testing before pruning......"<<endl;
+// 	for (int i = 0; i < numTestCases; ++i)
+// 	{
+// 		float error;
+// 		root->decide(datatest[i],expected[i],error);
+// 		totError = (totError*(i)+error)/(i+1);
 
-	}
-	float accuracy = (1-sqrt(totError))*100;
-	cout<<accuracy<<endl;
+// 	}
+// 	float accuracy = (1-sqrt(totError))*100;
+// 	cout<<accuracy<<endl;
 	//root->decide(in);
 cout<<"Pruning......"<<endl;
-	root->prune(datatest,expected);
+	root->prune(dataprune,expectedP);
 	cout<<numNodes<<endl;
 	totError = 0;
-cout<<"Testing after pruning......"<<endl;
-	for (int i = 0; i < numTestCases; ++i)
-	{
-		float error;
-		root->decide(datatest[i],expected[i],error);
-		totError = (totError*(i)+error)/(i+1);
+// cout<<"Testing after pruning......"<<endl;
+// 	for (int i = 0; i < numTestCases; ++i)
+// 	{
+// 		float error;
+// 		root->decide(datatest[i],expected[i],error);
+// 		totError = (totError*(i)+error)/(i+1);
 
-	}
-	accuracy = (1-sqrt(totError))*100;
-	cout<<accuracy<<","<<maxLeafNum<<endl;
-	cout<<"Testing on unseen file"<<endl;
+// 	}
+// 	accuracy = (1-sqrt(totError))*100;
+// 	cout<<accuracy<<","<<maxLeafNum<<endl;
+	cout<<"Testing on unseen file....."<<endl;
 	ofstream mfile ("output.csv");
-  
+  	mfile<<"Id,output"<<endl;
 	for (int i = 0; i < numTestCases; ++i)
 	{
 		float result;
@@ -424,7 +443,7 @@ cout<<"Testing after pruning......"<<endl;
 		if (mfile.is_open())
 		  {
 		  	//string s = result.str();
-		    mfile << result <<endl;
+		    mfile << i+1<<","<<result <<endl;
 		    
 		    
 		  }
@@ -433,7 +452,7 @@ cout<<"Testing after pruning......"<<endl;
 
 	}
 	mfile.close();
-
+	cout<<"Over"<<endl;
 
 	return 0;
 }
