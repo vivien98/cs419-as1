@@ -325,20 +325,21 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 
 
 
-int main()
+int main(int argc , char**argv)
 {
 	
 	int numInstances = 15;
 	int numAttr = 3;
 	int numTestCases = 15;
-	int maxLeafNum = 0;
+	const int maxLeafNum = stoi(argv[3]);
 	vector<vector<vector<float> > > dataout;
 	vector<vector<float> > datain;
 	vector<vector<float> > datatest;
 	vector<float> expected;
+	string errtype = argv[4];
 	
 	string line;
-	ifstream myfile ("toy_dataset.csv");
+	ifstream myfile (argv[1]);
 	if (myfile.is_open())
 	{
 	int k = 1;
@@ -354,7 +355,7 @@ int main()
   	else cout << "Unable to open training file"; 
 
   	string line1;
-	ifstream myfile1 ("toy_dataset.csv");
+	ifstream myfile1 (argv[2]);
 	if (myfile1.is_open())
 	{
 	int k1 = 1;

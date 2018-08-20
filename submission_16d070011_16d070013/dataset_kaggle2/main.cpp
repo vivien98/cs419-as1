@@ -4,7 +4,7 @@
 #include <map>
 #include <fstream>
 #include <string>
-
+#include <ctime>
 using namespace std;
 
 int ct = 0;
@@ -325,22 +325,23 @@ void readintovec(string line, vector<float> &data,int lineNum,int numAttr,bool t
 
 
 
-int main()
+int main(int argc , char**argv)
 {
-	
+	int a,b,c;
 	int numInstances = 3919;
 	int numPrune = 1306; 
 	int numAttr = 12;
 	int numTestCases = 979;
-	int maxLeafNum = 0;
+	int maxLeafNum = stoi(argv[3]);
+	string errtype = argv[4];
 	vector<vector<vector<float> > > dataout;
 	vector<vector<float> > datain;
 	vector<vector<float> > dataprune;
 	vector<vector<float> > datatest;
 	vector<float> expected,expectedP;
-	
+	a = clock();
 	string line;
-	ifstream myfile ("train.csv");
+	ifstream myfile (argv[1]);
 	if (myfile.is_open())
 	{
 	int k = 1;
@@ -364,7 +365,7 @@ int main()
   	else cout << "Unable to open training file"; 
 
   	string line1;
-	ifstream myfile1 ("test.csv");
+	ifstream myfile1 (argv[2]);
 	if (myfile1.is_open())
 	{
 	int k1 = 1;
@@ -407,6 +408,7 @@ cout<<"Sorting......"<<endl;
 cout<<"Training......"<<endl;
 	root->create(numAttr,numInstances-numPrune,dataout,prevNum,av,maxLeafNum);
 	float totError = 0;
+	b=clock();
 	cout<<numNodes<<endl;
 // cout<<"Testing before pruning......"<<endl;
 // 	for (int i = 0; i < numTestCases; ++i)
@@ -453,7 +455,9 @@ cout<<"Pruning......"<<endl;
 	}
 	mfile.close();
 	cout<<"Over"<<endl;
-
+c=clock();
+cout<< (b-a)/double(CLOCKS_PER_SEC)*1000<<endl;
+cout<< (c-b)/double(CLOCKS_PER_SEC)*1000<<endl;	
 	return 0;
 }
 

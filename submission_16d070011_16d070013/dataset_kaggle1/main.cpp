@@ -4,6 +4,7 @@
 #include <map>
 #include <fstream>
 #include <string>
+#include <ctime>
 
 using namespace std;
 
@@ -165,6 +166,7 @@ void printTable(int numAttr,vector<vector<vector<double> > > lchild){
 
 class Node{
 public:
+
 	double split = 0;
 	int attInd = 0;
 	double err;
@@ -179,7 +181,7 @@ public:
 	double av;
 	void create(int numAttr,int numInstances, vector<vector<vector<double> > > data,int prevNum,int maxLeafNum);
 	double decide(vector<double> instance);
-	double decide(vector<double> instance, double expected, double &error);
+	double decide(vector<double> instance, double expected, double &error,double &moderr);
 	void assignErr(vector<vector<double> > valiData,vector<double> expected);
 	void exploreAndCut();
 	void prune(vector<vector<double> > valiData,vector<double> expected);
@@ -249,29 +251,34 @@ double Node::decide(vector<double> instance){
 		}
 			return rchild->decide(instance);
 	}
-double Node::decide(vector<double> instance, double expected, double &error){
+double Node::decide(vector<double> instance, double expected, double &error, double &moderr){
 	ERR = (((expected - av)*(expected - av)) + numTestsPassed*ERR)/(numTestsPassed + 1);
 	passed = true;
 	numTestsPassed++;
+	//double dump;
 		if(isLeaf){
 			//cout<<av<<" "<<err<<endl;
 			error = (expected - av)*(expected - av)/(expected*expected);
+			//cout<<error<<endl;
+
+			moderr = abs((expected - av)/expected);
+			//cout<<moderr<<endl;
 			return av;
 		}
 		if(instance[attInd] < split){
 			//cout<<av<<" "<<err<<endl;
 			numLeft++;
-			return lchild->decide(instance,expected,error);
+			return lchild->decide(instance,expected,error,moderr);
 		}
 		//cout<<av<<" "<<err<<endl;
 		numRight++;
-		return rchild->decide(instance,expected,error);
+		return rchild->decide(instance,expected,error,moderr);
 	}
 void Node::assignErr(vector<vector<double> > valiData,vector<double> expected){
-	double e;
+	double e,f;
 	for (int i = 0; i < valiData.size(); i++)
 	{
-		decide(valiData[i],expected[i],e);
+		decide(valiData[i],expected[i],e,f);
 	}
 
 return;
@@ -333,16 +340,19 @@ void readintovec(string line, vector<double> &data,int lineNum,int numAttr,bool 
 
 
 
-int main()
+int main(int argc , char**argv)
 {
 	
-	const int numInstances = 576;
-	const int numPrune = 192;//192 
+	const int numInstances = 384;
+	const int numPrune = 128;//192 
 	int prunestart = 0;//0
 	int numAttr = 9;
 	const int numTestCases = 192;
-	const int maxLeafNum = 30;//30
+	const int maxLeafNum = stoi(argv[3]);//30
 	int numTrees = 0;
+	int a,b,c;
+	string errtype = argv[4];
+	//cout<< errtype;
 	// vector<vector<vector<double> > > dataout;
 	// vector<vector<double> > datain;
 	// vector<vector<double> > dataprune;
@@ -351,7 +361,9 @@ int main()
 	// vector<double> dataresult(numTestCases,0.0);
 	vector<double> dataresult(numTestCases,0.0);
 	
-while(prunestart < 40){//40
+while(prunestart < numInstances-numPrune){//40
+	////////////////////////////////////////////////training start
+	a = clock();
 	vector<vector<vector<double> > > dataout;
 	vector<vector<double> > datain;
 	vector<vector<double> > dataprune;
@@ -361,7 +373,7 @@ while(prunestart < 40){//40
 	numAttr = 9;
 	numNodes = numLeaves = 0;
 	string line;
-	ifstream myfile ("train.csv");
+	ifstream myfile (argv[1]);
 	if (myfile.is_open())
 	{
 	int k = 1;
@@ -385,7 +397,7 @@ while(prunestart < 40){//40
   	else cout << "Unable to open training file"; 
 
   	string line1;
-	ifstream myfile1 ("test.csv");
+	ifstream myfile1 (argv[2]);
 	if (myfile1.is_open())
 	{
 	int k1 = 1;
@@ -427,6 +439,9 @@ cout<<"Sorting......"<<endl;
 	Node* root = new Node;
 cout<<"Training......"<<endl;
 	root->create(numAttr,numInstances-numPrune,dataout,prevNum,maxLeafNum);
+	///////////////////////////////////////////////////////////////////////////training ends
+	b = clock();
+
 	double totError = 0;
 	cout<<numNodes<<" "<<root->isLeaf<<endl;
 // cout<<"Testing before pruning......"<<endl;
@@ -441,19 +456,36 @@ cout<<"Training......"<<endl;
 // 	cout<<accuracy<<endl;
 	//root->decide(in);
 cout<<"Pruning......"<<endl;
-	root->prune(dataprune,expectedP);
+	//root->prune(dataprune,expectedP);
 	cout<<numNodes<<endl;
 	totError = 0;
-// cout<<"Testing after pruning......"<<endl;
-// 	for (int i = 0; i < numTestCases; ++i)
-// 	{
-// 		double error;
-// 		root->decide(datatest[i],expected[i],error);
-// 		totError = (totError*(i)+error)/(i+1);
+cout<<"Testing after pruning......"<<endl;
+	double totModErr=0;
+	for (int i = 0; i < numTestCases; ++i)
+	{
+		double error,moderr;
+		root->decide(datatest[i],expected[i],error,moderr);
+		totError = (totError*(i)+error)/(i+1);
+		totModErr += moderr;
+		//cout<<moderr<<endl;
 
-// 	}
-// 	accuracy = (1-sqrt(totError))*100;
-// 	cout<<accuracy<<","<<maxLeafNum<<endl;
+	}
+	totModErr = totModErr/numTestCases;
+	//totModErr = (1.0 - totModErr);
+	double accuracy = (1-sqrt(totError))*100;
+	if(errtype == "absolute")
+	{
+		cout<< "Error (absolute): "<<totModErr<<endl;
+	}
+	else if (errtype == "mean_squared")
+	{
+		cout<< "Error (mean squared): "<<totError<<endl;
+	}
+	else 
+	{
+		cout<< "Type of error unknown. please enter absolute or mean_squared"<<endl;
+	}
+	//cout<<totError<<","<<totModErr<<endl;
 	cout<<"Testing on unseen file....."<<endl;
 	for (int i = 0; i < numTestCases; i++)
 	{
@@ -467,9 +499,11 @@ cout<<"Pruning......"<<endl;
 
 	}
 	root->~Node();
-prunestart += 5 ;
+prunestart += 127 ;
 if(numNodes>22)numTrees++;
 cout<<numTrees<<endl;
+c = clock();
+///////////////////////////////////////////////////////////////testing ends
 }
 
 
@@ -492,8 +526,9 @@ cout<<numTrees<<endl;
 
 	}
 	mfile.close();
-	cout<<"Over";//root->isLeaf<<endl;
-
+	cout<<"Over"<<endl;//root->isLeaf<<endl;
+cout<< "Training_time: "<<(b-a)/double(CLOCKS_PER_SEC)*1000<<endl;
+cout<< "Estimation_time: " <<(c-b)/double(CLOCKS_PER_SEC)*1000<<endl;
 	return 0;
 }
 
